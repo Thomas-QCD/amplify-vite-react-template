@@ -1,4 +1,4 @@
-import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -7,24 +7,47 @@ specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "Todo" records.
 =========================================================================*/
 const schema = a.schema({
-  Todo: a
-    .model({
-      content: a.string(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
+	Todo: a
+		.model({
+			content: a.string(),
+		})
+		.authorization((allow) => [allow.publicApiKey()]),
+	FormID: a.customType({
+		ID: a.string(),
+		formType: a.string(),
+		lastUpdated: a.string(),
+		status: a.string(),
+		customerEmail: a.string(),
+		customerName: a.string(),
+		organizationName: a.string(),
+		organizationPhone: a.string(),
+		dateCreated: a.string(),
+	}),
+
+	markFormAccessed: a
+		.mutation()
+		.arguments({ ID: a.string() })
+		.returns(a.ref('FormID'))
+		.authorization((allow) => [allow.publicApiKey()])
+		.handler(
+			a.handler.custom({
+				dataSource: a.ref('formIds_table_data_source'),
+				entry: './formAccessedHandler.js',
+			})
+		),
 });
 
 export type Schema = ClientSchema<typeof schema>;
 
 export const data = defineData({
-  schema,
-  authorizationModes: {
-    defaultAuthorizationMode: "apiKey",
-    // API Key is used for a.allow.public() rules
-    apiKeyAuthorizationMode: {
-      expiresInDays: 30,
-    },
-  },
+	schema,
+	authorizationModes: {
+		defaultAuthorizationMode: 'apiKey',
+		// API Key is used for a.allow.public() rules
+		apiKeyAuthorizationMode: {
+			expiresInDays: 30,
+		},
+	},
 });
 
 /*== STEP 2 ===============================================================
